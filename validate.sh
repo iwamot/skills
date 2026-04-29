@@ -8,10 +8,7 @@ mise install
 
 # Run shared lint tasks
 mise run gha-lint
-
-# Shell lint
-shfmt -w -i 2 .
-find . -type f -name '*.sh' -not -path './.git/*' -exec shellcheck {} +
+mise run shell-lint
 
 # Lint SKILL.md files
 skill-check . --no-security-scan --fail-on-warning --fix
