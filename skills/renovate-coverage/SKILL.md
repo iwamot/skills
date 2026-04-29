@@ -1,12 +1,12 @@
 ---
 name: renovate-coverage
-description: Detect Renovate Dependency Dashboard coverage gaps in a git repo. Lists version-like strings (semver, year-based versions, git SHA-40) found in Renovate-managed files (`.github/workflows/*.{yml,yaml}`, `Dockerfile*`, `compose*.{yml,yaml}`, `mise.toml`, `package.json`, `*.tf`, `go.mod`, `pyproject.toml`, `requirements*.txt`, etc.) that do NOT appear in the open "Dependency Dashboard" issue body. Use when the user asks to audit Renovate detection coverage or find versions that Renovate is not tracking.
+description: Detect Renovate Dependency Dashboard coverage gaps in a git repo. Cross-references version-like strings in Renovate-managed files (`.github/workflows/*.{yml,yaml}`, `Dockerfile*`, `compose*.{yml,yaml}`, `mise.toml`, `package.json`, `*.tf`, `go.mod`, `pyproject.toml`, `requirements*.txt`, etc.) against the open "Dependency Dashboard" issue's "Detected Dependencies" listing, and reports lines whose dependency is not tracked by Renovate. Use when the user asks to audit Renovate detection coverage or find dependencies that Renovate is not tracking.
 license: MIT
 ---
 
 # renovate-coverage
 
-Audit the current repository for version-like strings that appear in Renovate-managed files but are missing from the Renovate "Dependency Dashboard" issue. Helps surface dependencies that Renovate is not tracking (e.g., values held in fields outside a manager's extraction scope, or values requiring a `customManager`).
+Audit the current repository for dependencies that Renovate is not tracking. The bundled script extracts the open "Dependency Dashboard" issue body and every line containing a version-like token from Renovate-managed files. The agent then judges, line by line, whether each candidate's dependency appears in the dashboard's "Detected Dependencies" listing.
 
 ## Prerequisites
 
@@ -16,7 +16,7 @@ Audit the current repository for version-like strings that appear in Renovate-ma
 
 ## Procedure
 
-### 1. Run the coverage check
+### 1. Collect data
 
 Run the bundled script from the user's target git repository:
 
@@ -24,24 +24,39 @@ Run the bundled script from the user's target git repository:
 bash scripts/check_coverage.sh
 ```
 
-The script:
+Output has two sections:
 
-- Fetches the body of the open "Dependency Dashboard" issue via `gh`
-- Finds files matching the common Renovate manager `fileMatch` patterns
-- Greps version-like tokens (`[0-9]+\.[0-9]+(\.[0-9]+)?` or git SHA-40) from each file
-- Outputs TSV rows for tokens whose exact string does NOT appear anywhere in the dashboard body: `file:line<TAB>version<TAB>snippet`
+- `=== Dependency Dashboard ===` — full body of the open dashboard issue
+- `=== Candidate lines (file:line:content) ===` — every line from Renovate-managed files that contains a version-like token
 
-### 2. Present results
+### 2. Judge each candidate
+
+For each candidate line, determine whether the dependency it represents is already tracked by Renovate. Apply this reasoning:
+
+1. **Identify the dependency**. Parse the candidate line in context. The package identifier may be on the same line (`"npm:renovate" = "43.150.0"`, `FROM alpine:3.22`, `iwamot/workflows@<sha>`), in a parent section header (`[tools.uv]\nversion = "0.11.8"`), or in a surrounding mapping (YAML/JSON nesting). Use the Read tool to inspect the file's structure when the line alone is ambiguous.
+2. **Check the dashboard**. The "Detected Dependencies" section of the dashboard groups tracked dependencies by manager and file. A dependency is tracked if its identifier appears under any group there. The "Pending Status Checks" section is for already-tracked deps awaiting an update; it does not by itself prove tracking, but the same dep is also listed under "Detected Dependencies" when truly tracked.
+3. **Recognize common non-tracked patterns**. The following are typically NOT real coverage gaps:
+   - `min_version` in `mise.toml` / `.mise.toml` (mise's own version requirement, not a managed dep)
+   - The project's own `version` field (`[project] version = "..."` in `pyproject.toml`, top-level `"version"` in `package.json`)
+   - Version-like substrings inside descriptions, comments, examples, or default-value strings
+   - Year-based dates (`2026.4.8`) that look like versions but aren't dependency versions
+4. **Recognize real coverage gaps**. Likely-genuine gaps include:
+   - `Dockerfile`'s `ARG FOO_VERSION=1.2.3` / `ENV FOO_VERSION=1.2.3` patterns (Renovate's dockerfile manager typically does not auto-extract these)
+   - Versions held in custom fields outside any Renovate manager's `fileMatch` scope
+   - Tools listed in non-standard files
+
+### 3. Present results
 
 - Reply in the same language the user used in their request
-- Render the script output as a markdown table: `file:line | version | snippet`
-- Render each row as a clickable markdown link pointing to that file:line in the repo
-- Above the table, state that recall is prioritized — false positives (dates, IPs, doc examples, comment SHAs, etc.) are expected and the user is asked to triage manually
-- If the result is empty, report that no version strings outside the dashboard were found
+- Render only the truly untracked candidates as a markdown table: `file:line | dependency | snippet | reason`
+- Render each row's `file:line` as a clickable markdown link
+- Above the table, briefly state how many candidate lines the script produced and how many remain after triage
+- If nothing remains, report that no untracked dependencies were found
 
-### 3. Suggest follow-ups (only if the user asks)
+### 4. Suggest follow-ups (only if the user asks)
 
 For rows that look like genuine coverage gaps, options include:
+
 - Add a `customManager` (regex) entry to the repo's Renovate config
 - File or upvote a Renovate feature request if it is a missing built-in manager capability
 - Mark intentionally untracked items in the user's notes
@@ -65,6 +80,7 @@ For unexpected failures, present the raw script output and ask the user how to p
 
 ## Notes
 
-- This audit is recall-oriented; do not gate CI on its output.
+- This audit is interactive and recall-oriented; do not gate CI on its output.
 - The script's file pattern list covers common managers but is not exhaustive. To extend coverage, edit `scripts/check_coverage.sh`.
-- The Dependency Dashboard's `regex` section may show duplicate entries for the same dep (a known Renovate bug); this does not affect this audit, which only checks string presence in the body.
+- The Dependency Dashboard's `regex` section may show duplicate entries for the same dep (a known Renovate bug); this does not affect this audit.
+- If the user's local working tree is behind the default branch, the dashboard may reflect newer file content than what is checked locally. Suggest `git pull` if the candidate set looks unexpected.

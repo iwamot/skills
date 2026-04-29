@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# List version-like strings in this repo's Renovate-managed files that do NOT
-# appear in the open "Dependency Dashboard" issue body.
+# Emit raw inputs for a renovate-coverage audit:
+#  - the open "Dependency Dashboard" issue body, and
+#  - every line in this repo's Renovate-managed files that contains a
+#    version-like token (semver / year-based / git SHA-40).
+# Coverage judgement is left to the agent reading this output.
 
 set -euo pipefail
 
@@ -56,17 +59,8 @@ fi
 
 pattern='[0-9]+\.[0-9]+(\.[0-9]+)?|[0-9a-f]{40}'
 
-printf 'file:line\tversion\tsnippet\n'
-for f in "${files[@]}"; do
-  grep -nHE "$pattern" "$f" 2>/dev/null | while IFS= read -r hit; do
-    path=$(printf '%s' "$hit" | cut -d: -f1)
-    lineno=$(printf '%s' "$hit" | cut -d: -f2)
-    content=$(printf '%s' "$hit" | cut -d: -f3- | tr -s ' \t' ' ' | sed 's/^ //')
-    while IFS= read -r token; do
-      [ -z "$token" ] && continue
-      if ! printf '%s' "$dashboard" | grep -qF -- "$token"; then
-        printf '%s:%s\t%s\t%s\n' "$path" "$lineno" "$token" "$content"
-      fi
-    done < <(printf '%s' "$content" | grep -oE "$pattern" | sort -u)
-  done
-done
+echo "=== Dependency Dashboard ==="
+printf '%s\n' "$dashboard"
+echo
+echo "=== Candidate lines (file:line:content) ==="
+grep -nHE "$pattern" "${files[@]}" 2>/dev/null || true
