@@ -1,6 +1,6 @@
 ---
 name: renovate-coverage
-description: Detect Renovate Dependency Dashboard coverage gaps in a git repo. Lists version-like strings (semver, year-based versions, git SHA-40) found in Renovate-managed files (`.github/workflows/*.{yml,yaml}`, `Dockerfile*`, `compose*.{yml,yaml}`, `mise.toml`, `package.json`, `*.tf`, `go.mod`, `pyproject.toml`, `requirements*.txt`, etc.) that do NOT appear in the open "Dependency Dashboard" issue body. Use when the user asks to audit Renovate detection coverage, find versions that Renovate is not tracking, or invokes /renovate-coverage.
+description: Detect Renovate Dependency Dashboard coverage gaps in a git repo. Lists version-like strings (semver, year-based versions, git SHA-40) found in Renovate-managed files (`.github/workflows/*.{yml,yaml}`, `Dockerfile*`, `compose*.{yml,yaml}`, `mise.toml`, `package.json`, `*.tf`, `go.mod`, `pyproject.toml`, `requirements*.txt`, etc.) that do NOT appear in the open "Dependency Dashboard" issue body. Use when the user asks to audit Renovate detection coverage or find versions that Renovate is not tracking.
 license: MIT
 ---
 
@@ -10,16 +10,18 @@ Audit the current repository for version-like strings that appear in Renovate-ma
 
 ## Prerequisites
 
-- Run from the repository root
+- Run from the root of the target repository (the repo to audit, not this skill's repo)
 - `gh` CLI authenticated (`gh auth status` succeeds)
-- Repo has Renovate enabled with an open "Dependency Dashboard" issue
+- The target repo has Renovate enabled with an open "Dependency Dashboard" issue
 
 ## Procedure
 
 ### 1. Run the coverage check
 
+Run the bundled script from the user's target git repository:
+
 ```bash
-bash ~/.claude/skills/renovate-coverage/scripts/check_coverage.sh
+bash scripts/check_coverage.sh
 ```
 
 The script:
