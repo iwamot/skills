@@ -1,0 +1,22 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
+  "name": "iwamot-skills",
+  "owner": {
+    "name": "Takashi Iwamoto",
+    "email": "hello@iwamot.com"
+  },
+  "metadata": {
+    "description": "Claude Code skills by iwamot"
+  },
+  "plugins": [
+    {
+      "name": "renovate-tools",
+      "description": "Skills for auditing and managing Renovate dependency updates",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/renovate-coverage"
+      ]
+    }
+  ]
+}

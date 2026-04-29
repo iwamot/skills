@@ -1,37 +1,78 @@
-# repo-template
+# skills
 
-Starter template for repositories in iwamot's ecosystem.
+Claude Code skills by iwamot, distributed as a [Claude Code plugin marketplace](https://docs.claude.com/en/docs/claude-code/plugin-marketplaces) and compatible with the [Agent Skills standard](https://agentskills.io) (`gh skill install`).
 
-## Files
+## Available skills
 
-| Path | Purpose |
-|------|---------|
-| `.github/dco.yml` | DCO Bot config. Allows individual remediation commits for missing sign-offs. |
-| `.github/release.yml` | GitHub auto-generated release notes categorization (Features / Dependencies). |
-| `.github/renovate.json` | Extends `iwamot/renovate-config` preset. |
-| `.github/workflows/validate.yml` | Runs `validate.sh` on push and PR via `iwamot/workflows`. |
-| `.github/workflows/renovate.yml` | Self-hosted Renovate runner (hourly + on push to main). |
-| `.github/workflows/dependency-review.yml` | Vulnerability and license review on PRs. |
-| `.github/workflows/dependabot-auto-merge.yml` | Auto-merges Dependabot PRs. |
-| `mise.toml` | Pins mise minimum version and includes shared tasks from `iwamot/mise-tasks`. |
-| `validate.sh` | Lint entry point invoked by `iwamot/actions/mise-validate`. Add repo-specific lint at the marked location. |
+| Plugin | Skill | Purpose |
+|--------|-------|---------|
+| `renovate-tools` | `renovate-coverage` | Audit a repo for version-like strings present in Renovate-managed files but missing from the open Dependency Dashboard issue. |
 
-## Post-creation setup
+## Install
 
-After clicking **Use this template**:
+### Claude Code (plugin marketplace)
 
-1. **Replace this README.md** with the new repository's own description.
-2. **Install GitHub Apps** for the new repo:
-   - [DCO](https://github.com/apps/dco) — sign-off enforcement
-   - Renovate App (or your self-hosted equivalent)
-3. **Create a GitHub Environment** for Renovate (default name: `production`, override via the `environment` input on `renovate.yml` if needed) and add environment-scoped secrets:
-   - `RENOVATE_APP_ID`
-   - `RENOVATE_PRIVATE_KEY`
-4. **Add a publish workflow** if the repo ships artifacts. These also take an `environment` input — create additional environments as needed:
-   - `iwamot/workflows/.github/workflows/publish-ghcr.yml` for GHCR
-   - `iwamot/workflows/.github/workflows/publish-ecr-public.yml` for ECR Public
-5. **Add language-specific files** as needed: `Dockerfile`, `package.json`, `pyproject.toml`, `.gitignore`, etc.
-6. **Extend `validate.sh`** with repo-specific lint (e.g. `mise run docker-lint Dockerfile`, language linters).
-7. **Review `mise.toml`'s `min_version`**: the template provides a default, but the minimum mise version is each repository's own decision. Bump it if your tasks require a newer feature, or drop it if no constraint is needed. This is *not* auto-bumped by Renovate.
+```
+/plugin marketplace add iwamot/skills
+/plugin install renovate-tools@iwamot-skills
+```
 
-Renovate runs on this template to keep pinned versions in `.github/workflows/*.yml` and `mise.toml`'s `task_config.includes` reasonably current, but derived repositories are responsible for their own updates going forward — enable Renovate and let it track upstream from there.
+Pin to a tag:
+
+```
+/plugin marketplace add https://github.com/iwamot/skills.git#v0.1.0
+```
+
+### Agent Skills CLI (`gh skill`)
+
+```bash
+gh skill install iwamot/skills renovate-coverage
+```
+
+Pin to a tag:
+
+```bash
+gh skill install iwamot/skills renovate-coverage --pin v0.1.0
+```
+
+## Layout
+
+```
+.
+├── .claude-plugin/marketplace.json   # marketplace + plugin declarations
+├── skills/                           # skills, flat layout
+│   └── renovate-coverage/
+│       ├── SKILL.md
+│       └── scripts/
+├── mise.toml                         # dev tool pins (jq, node, shfmt, ...)
+├── validate.sh                       # local validation entry point
+└── .github/                          # CI workflows, Renovate config
+```
+
+## Local development
+
+Clone the repo and symlink an individual skill into `~/.claude/skills/` for live editing in Claude Code:
+
+```bash
+git clone https://github.com/iwamot/skills ~/skills
+ln -s ~/skills/skills/renovate-coverage ~/.claude/skills/renovate-coverage
+```
+
+Run validation locally:
+
+```bash
+mise install
+bash validate.sh
+```
+
+`validate.sh` runs:
+
+- `shfmt` + `shellcheck` for shell scripts
+- `zizmor` for GitHub Actions
+- `check-jsonschema` for `marketplace.json` against [SchemaStore](https://www.schemastore.org/json/)
+- `skill-check` (community linter) for SKILL.md quality
+- `gh skill publish --dry-run` against the Agent Skills spec
+
+## License
+
+[MIT](LICENSE)
