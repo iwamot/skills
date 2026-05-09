@@ -9,6 +9,7 @@ mise install
 # Run shared lint tasks
 mise run gha-lint
 mise run shell-lint
+mise run git-lint
 
 # Lint SKILL.md files
 skill-check . --no-security-scan --fail-on-warning --fix
