@@ -1,5 +1,7 @@
 # skills
 
+[![release](https://img.shields.io/github/v/release/iwamot/skills)](https://github.com/iwamot/skills/releases)
+
 Agent Skills by iwamot. Installable via [`gh skill install`](https://cli.github.com/manual/gh_skill_install).
 
 ## Available skills
