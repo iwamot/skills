@@ -1,11 +1,12 @@
-min_version = "2026.4.8"
+min_version = "2026.6.3"
 
 [settings]
-install_before = "1d"
+npm.package_manager = "aube"
 
 [tools]
 gh = "2.94.0"
 node = "24.16.0"
+"aqua:jdx/aube" = "1.18.1"
 "npm:skill-check" = "1.2.0"
 
 [task_config]
