@@ -6,7 +6,7 @@ npm.package_manager = "aube"
 [tools]
 gh = "2.95.0"
 node = "24.18.0"
-"aqua:jdx/aube" = "1.25.1"
+"aqua:jdx/aube" = "1.25.2"
 "npm:skill-check" = "1.2.0"
 
 [task_config]
