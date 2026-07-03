@@ -4,7 +4,7 @@ min_version = "2026.6.3"
 npm.package_manager = "aube"
 
 [tools]
-gh = "2.95.0"
+gh = "2.96.0"
 node = "24.18.0"
 "aqua:jdx/aube" = "1.25.2"
 "npm:skill-check" = "1.2.0"
