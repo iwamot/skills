@@ -42,8 +42,7 @@ fi
 mapfile -t files < <(find . \( \
   -path './.github/workflows/*.yml' -o \
   -path './.github/workflows/*.yaml' -o \
-  -path './.github/actions/*/action.yml' -o \
-  -path './.github/actions/*/action.yaml' -o \
+  -name 'action.yml' -o -name 'action.yaml' -o \
   -name 'Dockerfile' -o -name 'Dockerfile.*' -o -name '*.Dockerfile' -o \
   -name 'compose.yml' -o -name 'compose.yaml' -o \
   -name 'docker-compose*.yml' -o -name 'docker-compose*.yaml' -o \
