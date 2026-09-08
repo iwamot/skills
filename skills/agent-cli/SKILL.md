@@ -1,6 +1,6 @@
 ---
 name: agent-cli
-description: Design or review a command-line tool that coding agents will call from a shell. Covers the instruction paragraph for CLAUDE.md/AGENTS.md, error messages that carry the next step, exit codes split by which layer failed, output shapes declared as a contract, and the README structure that goes with them. Use when the user is writing a new CLI for agents, or asks to review, tighten, or "make agent-friendly" an existing CLI's --help, errors, README, or instruction paragraph.
+description: Design or review a command-line tool that coding agents will call from a shell. Covers the instruction paragraph that goes in an agent instruction file, error messages that carry the next step, exit codes split by which layer failed, output shapes declared as a contract, and the README structure that goes with them. Use when the user is writing a new CLI for agents, or asks to review, tighten, or "make agent-friendly" an existing CLI's --help, errors, README, or instruction paragraph.
 license: MIT
 ---
 
@@ -10,7 +10,7 @@ Design or review a CLI whose main caller is a coding agent driving a shell. The 
 
 ## Judgment
 
-Return to these when a call is not obvious. Each stands on its own; the examples all come from one tool (`sub1`, a CLI that replaces one block of text in a file).
+Return to these when a call is not obvious. Each stands on its own. The examples are drawn from real CLIs; several come from one that replaces a single block of text in a file, so `old block` and `new block` below mean that tool's two inputs.
 
 - **The instruction paragraph carries three things: that the tool exists, when to reach for it, and the shape of a call.** Everything else arrives in the output of the call that needed it. Test: if the paragraph and stderr would tell the agent different next steps in the same situation, the paragraph is wrong.
 - **An error line is `<what>; <remediation>`, and the remediation is copy-ready.** Fill in the real value (`pass -n 3`, not `pass -n N`). When there is nothing to do, leave the `; ` tail off rather than inventing advice: `old and new blocks are identical` ends there, because changing the new block is the only move.
@@ -23,13 +23,13 @@ Return to these when a call is not obvious. Each stands on its own; the examples
 
 ## README skeleton
 
-Each section answers a question the one before it raises.
+Each section answers a question the one before it raises. This is an order, not a form: collapse the sections a small CLI does not need.
 
-1. **Opening** — one-line purpose, "Built for coding agents that ...", and one real invocation with its real output.
-2. **Why** — the measured motivation (how often an agent hand-wrote the equivalent), then "X is that script, made into a command", then who it is not for.
-3. **Setup** — install, the instruction paragraph in a fenced block ready to paste into CLAUDE.md or AGENTS.md, and a flag that prints the same paragraph (`--instructions`). An e2e test keeps the two equal.
+1. **Opening** — one-line purpose, who the caller is, and one real invocation with its real output.
+2. **Why** — where the obvious alternatives fall short, what the tool replaces, then who it is not for.
+3. **Setup** — install, the instruction paragraph in a fenced block ready to paste into an agent instruction file (`AGENTS.md`, `CLAUDE.md`), and a flag that prints the same paragraph (`--instructions`, say). Keep the two from drifting.
 4. **What the agent sees** — one success, then every failure the agent will actually meet, each with its real stderr.
-5. **Reference** — `--help` verbatim, then bullets for what `--help` has no room for: matching rules, atomic write, terminator collisions.
+5. **Reference** — `--help` verbatim, then bullets for what `--help` has no room for: matching rules, what a write does on failure, and whatever the tool's own input format can collide with.
 6. **Output** — the stable shapes as a table, and the parts that ride on top and are not stable.
 7. **Out of scope.**
 
@@ -41,18 +41,20 @@ Line 1 is the contract: `name — what it does, exactly`. Then `Usage:`. Then `E
 
 Steps 1-3 gather evidence, 4-6 produce findings, 7 reports. Do not skip to the report: the matrix in step 2 is what makes the rest checkable.
 
-1. **Read before running.** README, `--help`, `--instructions`. List every claim that could be false: "never writes", "byte-exact", "exit 1 means ...".
+1. **Read before running.** README, `--help`, and the flag that prints the instruction paragraph if the tool has one. List every claim that could be false: "never writes", "byte-exact", "exit 1 means ...".
 2. **Build the real binary and probe the failure matrix.** Run each of these and record the exact stderr and exit code:
    - no arguments; a malformed argument; a target that does not exist; a target the user cannot read or write
-   - empty stdin; stdin cut short mid-input; stdin on a TTY (`script -qec '<cmd>' /dev/null`)
+   - empty stdin; stdin cut short mid-input; stdin on a TTY. Allocating one is not portable: `script -qec '<cmd>' /dev/null` on util-linux, `script -q /dev/null sh -c '<cmd>'` on macOS and BSD, where the command is argv rather than a string the shell reparses
    - every flag combination the README says does not apply
 
    Write the matrix as a table before proposing anything.
 3. **Check each README claim against the matrix.** Where they differ, quote the observed behaviour, never the intended one. An item written from intent ("confirm this still holds") gets "fixed" the wrong way at implementation time.
-4. **Run the linter.** `bash scripts/agent_lint.sh PATH_TO_BINARY` (see Troubleshooting for its errors). Triage every non-PASS into adopt / skip-with-reason / false positive. The reasons are the deliverable; the score is not. Its active checks execute the target as a subprocess, so run it from an empty scratch directory; keep `--no-probe` for a target that reaches the network or spends a rate limit, and say in the report that the active checks were skipped. A passive run leaves about a third of the checks unevaluated, the one on actionable error messages among them.
+4. **Hold Judgment against the matrix, and run a linter if one is at hand.** Every row from step 2 gets at least one item from Judgment held against it, usually several: whether the message is actionable and whether the output shape is stable both bear on the same row. That pass is the judgment, and steps 1-3 and 5-7 stand without any tool.
+
+   A linter automates part of it. `bash scripts/agent_lint.sh PATH_TO_BINARY` runs `cli-agent-lint`, which needs a Go toolchain and an install, so ask before installing (see Troubleshooting for its errors). Triage every non-PASS into adopt / skip-with-reason / false positive. The reasons are the deliverable; the score is not. Its active checks execute the target as a subprocess, so run it from an empty scratch directory; keep `--no-probe` for a target that reaches the network or spends a rate limit, and say in the report that the active checks were skipped. A passive run leaves about a third of the checks unevaluated, the one on actionable error messages among them.
 5. **Diff the instruction paragraph against stderr.** For each failure in the matrix: what does the paragraph tell the agent to do, and what does stderr tell it? Any disagreement is a finding, and the paragraph is usually the side that is wrong.
-6. **Count the copies of the instruction paragraph** (source, README, the user's global CLAUDE.md, anywhere else it was pasted) and say which copies no test protects.
-7. **Report** in the language the user wrote in. Findings first, each with the observed line and the proposed line; then the lint triage table; then what was checked and found fine. Group the proposals by conventional-commit type: `feat!:` for exit codes and output shapes, `feat:` for messages, `docs:` for README and help text.
+6. **Count the copies of the instruction paragraph** (source, README, every agent instruction file it was pasted into, anywhere else it was copied to) and say which copies no test protects.
+7. **Report** in the language the user wrote in. Findings first, each with the observed line and the proposed line; then the lint triage table if a linter ran; then what was checked and found fine. Group the proposals by how much they break: breaking for exit codes and output shapes, because callers depend on those as a contract; behavioural for messages; docs-only for README and help text.
 
 ## Troubleshooting
 
@@ -68,5 +70,5 @@ The script exits with the linter's own status when it ran: `0` when every check 
 
 ## What this skill does not do
 
-- It proposes diffs. It does not edit the target repo's README, or the user's global CLAUDE.md, without being asked.
+- It proposes diffs. It does not edit the target repo's README, or any agent instruction file the paragraph was pasted into, without being asked.
 - It carries no time-bound facts about any agent harness (feature flags, prompt wording). Those go stale and belong in the user's own notes.
