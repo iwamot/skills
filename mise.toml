@@ -9,7 +9,7 @@ locked = true
 
 [tools]
 gh = "2.100.0"
-node = "24.20.0"
+node = "24.21.0"
 "aqua:jdx/aube" = "2.2.12"
 "npm:skill-check" = "1.2.0"
 
