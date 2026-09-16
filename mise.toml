@@ -8,7 +8,7 @@ npm.package_manager = "aube"
 locked = true
 
 [tools]
-gh = "2.100.0"
+gh = "2.101.0"
 node = "24.21.0"
 "aqua:jdx/aube" = "2.2.16"
 "npm:skill-check" = "1.2.0"
