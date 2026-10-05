@@ -52,6 +52,7 @@ A narrower information access condition (for example "product docs only") is a s
   3. **Edge application**: something at the boundary that no existing example covers.
 - Write each task in the words a real user would use when asking an AI agent: the request, an input example and an observable completion condition.
 - Do not name APIs, commands, or places to look. Write "Create a workflow that invokes this Lambda function and returns its payload", not "Use `aws.lambda.invoke()` and `Output`".
+- With a focus area, design at least one task where the focused behaviour is likely to arise naturally, through the input or situation the user hands over (stale content, a conflicting config). Do not tell the tester which mistake to make or which known issue to hit.
 - Check the docs that no task asks for something the product declares out of scope.
 - Include the tasks the user specified, keeping their requirements unchanged; fill in a missing input example or completion condition yourself.
 - Write exploration tasks fresh every run, because a product tuned against the same tasks run after run gets tuned for those tasks. To compare before and after a change, keep a small set of comparison tasks with fixed requirements and completion conditions, and still add fresh exploration tasks. Keep model, harness, tools, information access and setup the same across compared runs as far as possible, and record any difference.
@@ -76,6 +77,8 @@ A narrower information access condition (for example "product docs only") is a s
 - Reproduce each major finding with a minimal case and mark it **confirmed** or **unconfirmed**.
 - Do not discard friction a tester actually experienced because you know the design intent. When the cause cannot be confirmed, keep the observation and state your confidence in its cause and generality separately.
 - Reading the product's implementation or tests does not by itself make a defect. Distinguish a task solved through the public interface from one solved only after reading internals, and from one solved by following existing code in the using project or external references.
+- When a tester recovered after a diagnostic, record separately the sources it actually consulted after the diagnostic (re-reading files, docs, internals) and whether the diagnostic contained the information needed for the fix. Report task completion and recovery after the diagnostic separately.
+- If the focused behaviour did not occur in any task, keep those outcomes as they are and run one additional task, with a fresh tester, whose input or situation makes the behaviour likely to arise naturally. Keep the rules from step 3: no failure method, no known issue. If the behaviour still does not occur, stop there and record it under limitations as not observed.
 
 ### 5. Aggregate
 
@@ -103,8 +106,8 @@ A narrower information access condition (for example "product docs only") is a s
 
 ## Report structure
 
-1. **Conditions**: target version or commit; the testers' model name or ID, agent harness and tools; whether the parent could see the testers' history; fresh-context independence, including automatically loaded instruction files; information access condition; setup included or excluded; task definitions; attempt or time limits; for comparisons, which tasks are fixed and any condition that differs.
-2. **Task outcomes**: per task, the tester's completion (`success` / `partial` / `failure`) and the parent's check against the completion condition; main actions and failed attempts, marked as reconstructed from history or self-reported; information sources by category, the decisive source and the path to it; when internals were read, when, why, which files and what was learned; observed cost; corrections after diagnostics; advice given and what changed after it; decision traces.
+1. **Conditions**: target version or commit; the testers' model name or ID, agent harness and tools; whether the parent could see the testers' history; fresh-context independence, including automatically loaded instruction files; information access condition; setup included or excluded; task definitions, and any task added after the first round with the reason; attempt or time limits; for comparisons, which tasks are fixed and any condition that differs.
+2. **Task outcomes**: per task, the tester's completion (`success` / `partial` / `failure`) and the parent's check against the completion condition; main actions and failed attempts, marked as reconstructed from history or self-reported; information sources by category, the decisive source and the path to it; when internals were read, when, why, which files and what was learned; observed cost; corrections after diagnostics, with the sources consulted after each and whether the diagnostic contained the information needed for the fix; advice given and what changed after it; decision traces.
 3. **Findings**: per finding, the tester observation; confirmed or unconfirmed; affected tasks; fix category; AI usability qualities; severity; verification; parent analysis; recommendation.
 4. **What worked well**: where the agents found, understood, operated or self-corrected easily.
 5. **Setup record**: what the parent prepared, the commands, and any problems. Omit when setup was included.
@@ -115,4 +118,4 @@ A narrower information access condition (for example "product docs only") is a s
    - This test does not directly evaluate usability for people.
    - What setup exclusion left out of the evaluation (when setup was excluded).
    - The findings are candidates for a roadmap, not the roadmap. The author sets the priorities.
-   - Where they apply: lost independence, and the influence of external information or environment constraints.
+   - Where they apply: lost independence, the influence of external information or environment constraints, and a focused behaviour that was not observed.
