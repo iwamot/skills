@@ -10,7 +10,7 @@ locked = true
 [tools]
 gh = "2.102.0"
 node = "24.22.0"
-"aqua:jdx/aube" = "2.7.0"
+"aqua:jdx/aube" = "2.7.1"
 "npm:skill-check" = "1.2.0"
 
 [task_config]
