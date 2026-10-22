@@ -9,7 +9,7 @@ npm.package_manager = "aube"
 locked = true
 
 [tools]
-gh = "2.102.1"
+gh = "2.103.0"
 node = "24.22.1"
 "aqua:aubepkg/aube" = "2.8.1"
 "npm:skill-check" = "1.2.0"
