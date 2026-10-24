@@ -11,7 +11,7 @@ locked = true
 [tools]
 gh = "2.103.0"
 node = "24.22.1"
-"aqua:aubepkg/aube" = "2.8.1"
+"aqua:aubepkg/aube" = "2.8.2"
 "npm:skill-check" = "1.2.0"
 
 [task_config]
