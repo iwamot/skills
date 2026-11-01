@@ -30,12 +30,15 @@ if ! gh auth status >/dev/null 2>&1; then
   exit 1
 fi
 
+# The title is matched whole, since an issue that only mentions the dashboard in
+# its title would otherwise be read in its place.
 dashboard=$(gh issue list --search "Dependency Dashboard in:title" --state open \
-  --json body --jq '.[0].body // ""' 2>/dev/null || echo "")
+  --json title,body \
+  --jq 'map(select(.title == "Dependency Dashboard"))[0].body // ""' 2>/dev/null || echo "")
 
 if [ -z "$dashboard" ]; then
   echo "ERROR: open 'Dependency Dashboard' issue not found." >&2
-  echo "Ensure Renovate's 'dependencyDashboard: true' is set and the issue title contains 'Dependency Dashboard'." >&2
+  echo "Ensure Renovate's 'dependencyDashboard: true' is set and the issue title is exactly 'Dependency Dashboard'." >&2
   exit 1
 fi
 

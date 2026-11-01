@@ -73,7 +73,7 @@ If the script exits non-zero, relay the error message to the user verbatim and s
 | `'gh' CLI not found` | Install GitHub CLI from https://cli.github.com/ |
 | `not inside a git repository` | `cd` into the target git repo and re-run |
 | `'gh' is not authenticated` | Run `gh auth login` and re-run |
-| `open 'Dependency Dashboard' issue not found` | Confirm Renovate is configured with `dependencyDashboard: true`, the issue is open (not closed), and its title contains "Dependency Dashboard". The dashboard is created on Renovate's next run after enabling. |
+| `open 'Dependency Dashboard' issue not found` | Confirm Renovate is configured with `dependencyDashboard: true`, the issue is open (not closed), and its title is exactly "Dependency Dashboard". The dashboard is created on Renovate's next run after enabling. |
 
 If the script exits zero with `No Renovate-managed files found in this repo.`, that is not an error — the repo simply has no files matching common Renovate `fileMatch` patterns. Confirm with the user before treating it as a problem.
 
