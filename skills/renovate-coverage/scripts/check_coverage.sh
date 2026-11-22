@@ -42,17 +42,18 @@ if [ -z "$dashboard" ]; then
   exit 1
 fi
 
-mapfile -t files < <(find . \( \
-  -path './.github/workflows/*.yml' -o \
-  -path './.github/workflows/*.yaml' -o \
-  -name 'action.yml' -o -name 'action.yaml' -o \
-  -name 'Dockerfile' -o -name 'Dockerfile.*' -o -name '*.Dockerfile' -o \
-  -name 'compose.yml' -o -name 'compose.yaml' -o \
-  -name 'docker-compose*.yml' -o -name 'docker-compose*.yaml' -o \
-  -name 'mise.toml' -o -name '.mise.toml' -o -name '.tool-versions' -o \
-  -name 'package.json' -o -name 'requirements*.txt' -o \
-  -name 'pyproject.toml' -o -name 'go.mod' -o -name '*.tf' \
-  \) -not -path './node_modules/*' -not -path './.git/*' 2>/dev/null | sort)
+# Renovate reads what the repository holds, so only tracked files are candidates.
+# Installed dependencies (node_modules at any depth, .venv) and build output stay
+# out without listing them here.
+mapfile -t files < <(git ls-files | grep -E \
+  -e '^\.github/workflows/[^/]+\.ya?ml$' \
+  -e '(^|/)action\.ya?ml$' \
+  -e '(^|/)Dockerfile(\.[^/]+)?$' -e '(^|/)[^/]+\.Dockerfile$' \
+  -e '(^|/)compose\.ya?ml$' -e '(^|/)docker-compose[^/]*\.ya?ml$' \
+  -e '(^|/)\.?mise\.toml$' -e '(^|/)\.tool-versions$' \
+  -e '(^|/)package\.json$' -e '(^|/)requirements[^/]*\.txt$' \
+  -e '(^|/)pyproject\.toml$' -e '(^|/)go\.mod$' -e '\.tf$' |
+  sed 's|^|./|' | sort)
 
 if [ ${#files[@]} -eq 0 ]; then
   echo "No Renovate-managed files found in this repo." >&2
