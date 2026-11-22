@@ -28,7 +28,7 @@ if [ ! -x "$bin" ]; then
 fi
 
 if ! command -v cli-agent-lint >/dev/null 2>&1; then
-  echo "ERROR: cli-agent-lint not found; install with: go install github.com/Camil-H/cli-agent-lint@v0.3.5" >&2
+  echo "ERROR: cli-agent-lint not found; install with: go install github.com/Camil-H/cli-agent-lint@latest" >&2
   echo "Then put its bin directory on PATH: export PATH=\"\$PATH:\$(go env GOPATH)/bin\"" >&2
   exit 3
 fi
