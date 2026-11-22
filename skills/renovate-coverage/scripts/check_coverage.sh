@@ -44,15 +44,21 @@ fi
 
 # Renovate reads what the repository holds, so only tracked files are candidates.
 # Installed dependencies (node_modules at any depth, .venv) and build output stay
-# out without listing them here.
+# out without listing them here. The patterns are the default managerFilePatterns
+# of the managers named on each line, so a file Renovate reads is not skipped.
 mapfile -t files < <(git ls-files | grep -E \
-  -e '^\.github/workflows/[^/]+\.ya?ml$' \
-  -e '(^|/)action\.ya?ml$' \
-  -e '(^|/)Dockerfile(\.[^/]+)?$' -e '(^|/)[^/]+\.Dockerfile$' \
-  -e '(^|/)compose\.ya?ml$' -e '(^|/)docker-compose[^/]*\.ya?ml$' \
-  -e '(^|/)\.?mise\.toml$' -e '(^|/)\.tool-versions$' \
-  -e '(^|/)package\.json$' -e '(^|/)requirements[^/]*\.txt$' \
-  -e '(^|/)pyproject\.toml$' -e '(^|/)go\.mod$' -e '\.tf$' |
+  -e '(^|/)(workflow-templates|\.(github|gitea|forgejo)/(workflows|actions))/.+\.ya?ml$' \
+  -e '(^|/)action\.ya?ml$' `# github-actions` \
+  -e '(^|/|\.)([Dd]ocker|[Cc]ontainer)file$' -e '(^|/)([Dd]ocker|[Cc]ontainer)file[^/]*$' `# dockerfile` \
+  -e '(^|/)(docker-)?compose[^/]*\.ya?ml$' `# docker-compose` \
+  -e '(^|/)\.?mise(\.[^/]*)?\.toml$' -e '(^|/)\.?mise/config(\.[^/]*)?\.toml$' \
+  -e '(^|/)\.config/mise(\.[^/]*)?\.toml$' -e '(^|/)\.config/mise/(mise|config)(\.[^/]*)?\.toml$' \
+  -e '(^|/)\.config/mise/conf\.d/[^/]+\.toml$' -e '(^|/)\.rtx(\.[^/]*)?\.toml$' `# mise` \
+  -e '(^|/)\.tool-versions$' `# asdf` \
+  -e '(^|/)package\.json$' -e '(^|/)pnpm-workspace\.yaml$' -e '(^|/)\.yarnrc\.yml$' `# npm` \
+  -e '(^|/)[[:alnum:]_-]*requirements([-._][[:alnum:]_]+)?\.(txt|pip)$' `# pip_requirements` \
+  -e '(^|/)pyproject\.toml$' `# pep621` -e '(^|/)go\.mod$' `# gomod` \
+  -e '\.(tf|tofu)$' `# terraform` |
   sed 's|^|./|' | sort)
 
 if [ ${#files[@]} -eq 0 ]; then
